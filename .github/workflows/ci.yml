@@ -53,6 +53,7 @@ jobs:
         with:
           target: http://127.0.0.1:8000
           fail_action: false
+          allow_issue_writing: false
 
       - name: Build Docker image
         run: docker build --tag trivy-project:${{ github.sha }} .
