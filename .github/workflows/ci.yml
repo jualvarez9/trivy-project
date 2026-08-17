@@ -32,6 +32,28 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+      - name: Run SAST with Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/python
+
+      - name: Start API for DAST
+        run: |
+          uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/fastapi.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail http://127.0.0.1:8000/health
+
+      - name: Run DAST with OWASP ZAP Baseline
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: http://127.0.0.1:8000
+          fail_action: false
+
       - name: Build Docker image
         run: docker build --tag trivy-project:${{ github.sha }} .
 

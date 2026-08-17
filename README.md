@@ -48,11 +48,15 @@ monte un volumen.
 ## CI y Trivy
 
 El workflow de `.github/workflows/ci.yml` se ejecuta en cada push a `master` y
-en cada pull request. Hace tres cosas:
+en cada pull request. Hace estas comprobaciones:
 
 1. Instala las dependencias bloqueadas con `uv`.
 2. Ejecuta los tests.
-3. Construye la imagen y la escanea con Trivy.
+3. Ejecuta SAST con Semgrep sobre el código Python.
+4. Levanta la API y ejecuta un DAST pasivo con OWASP ZAP Baseline.
+5. Construye la imagen y la escanea con Trivy.
 
 El job falla si Trivy encuentra vulnerabilidades `HIGH` o `CRITICAL` que estén
-solucionadas en la base de datos de vulnerabilidades.
+solucionadas en la base de datos de vulnerabilidades. ZAP está configurado
+inicialmente con `fail_action: false` para poder observar sus hallazgos sin
+bloquear todavía el pipeline; después puedes endurecer esa política.
