@@ -4,6 +4,9 @@ COPY --from=ghcr.io/astral-sh/uv:0.12.5 /uv /uvx /bin/
 
 WORKDIR /app
 
+RUN groupadd --system appgroup \
+    && useradd --system --gid appgroup --home-dir /app appuser
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
@@ -18,6 +21,10 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-dev
 
 COPY app ./app
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 8000
 
