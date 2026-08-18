@@ -55,6 +55,15 @@ jobs:
           fail_action: false
           allow_issue_writing: false
 
+      - name: Scan Dockerfile configuration with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+
       - name: Build Docker image
         run: docker build --tag trivy-project:${{ github.sha }} .
 
