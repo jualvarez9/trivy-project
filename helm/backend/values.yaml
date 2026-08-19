@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/jualvarez9/trivy-project
+  repository: ghcr.io/jualvarez9/trivy-project-backend
   tag: latest
   pullPolicy: Always
 

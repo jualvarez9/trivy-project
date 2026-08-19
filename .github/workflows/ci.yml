@@ -68,18 +68,33 @@ jobs:
           exit-code: "1"
           severity: CRITICAL,HIGH
 
-      - name: Build Docker image
+      - name: Build backend Docker image
         run: |
           docker build \
-            --tag trivy-project:${{ github.sha }} \
-            --tag ${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            --tag ${{ env.IMAGE_NAME }}:latest \
+            --tag ${{ env.IMAGE_NAME }}-backend:${{ github.sha }} \
+            --tag ${{ env.IMAGE_NAME }}-backend:latest \
             .
 
-      - name: Scan Docker image with Trivy
+      - name: Build frontend Docker image
+        run: |
+          docker build \
+            --tag ${{ env.IMAGE_NAME }}-frontend:${{ github.sha }} \
+            --tag ${{ env.IMAGE_NAME }}-frontend:latest \
+            front
+
+      - name: Scan backend Docker image with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: trivy-project:${{ github.sha }}
+          image-ref: ${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Scan frontend Docker image with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
           format: table
           exit-code: "1"
           ignore-unfixed: true
@@ -93,8 +108,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push Docker image to GHCR
+      - name: Push images to GHCR
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
-          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker push ${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}-backend:latest
+          docker push ${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}-frontend:latest

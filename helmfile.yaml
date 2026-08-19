@@ -1,0 +1,14 @@
+repositories: []
+
+releases:
+  - name: todo-backend
+    namespace: todo
+    createNamespace: true
+    chart: ./helm/backend
+
+  - name: todo-frontend
+    namespace: todo
+    createNamespace: true
+    chart: ./helm/frontend
+    needs:
+      - todo/todo-backend

@@ -1,17 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: trivy-project
+  name: todo-backend
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/jualvarez9/trivy-project.git
     targetRevision: master
-    path: helm/trivy-project
+    path: helm/backend
+    helm:
+      releaseName: todo-backend
   destination:
     server: https://kubernetes.default.svc
-    namespace: trivy-project
+    namespace: todo
   syncPolicy:
     automated:
       prune: true

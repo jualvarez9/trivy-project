@@ -34,16 +34,22 @@ uv run pytest
 
 ## Docker
 
-Construir y ejecutar la imagen:
+Construir y ejecutar el backend:
 
 ```bash
-docker build -t trivy-project:local .
-docker run --rm -p 8000:8000 trivy-project:local
+docker build -t trivy-project-backend:local .
+docker run --rm -p 8000:8000 trivy-project-backend:local
 ```
 
 SQLite se guarda en el archivo `tasks.db`. Al ejecutar el contenedor, ese
 archivo vive dentro del contenedor y se pierde al eliminarlo, salvo que se
 monte un volumen.
+
+El frontend se construye por separado:
+
+```bash
+docker build -t trivy-project-frontend:local front
+```
 
 ## CI y Trivy
 
@@ -54,7 +60,8 @@ en cada pull request. Hace estas comprobaciones:
 2. Ejecuta los tests.
 3. Ejecuta SAST con Semgrep sobre el código Python.
 4. Levanta la API y ejecuta un DAST pasivo con OWASP ZAP Baseline.
-5. Construye la imagen y la escanea con Trivy.
+5. Construye y escanea las imágenes separadas de backend y frontend.
+6. Publica ambas imágenes en GHCR cuando el push llega a `master`.
 
 El job falla si Trivy encuentra vulnerabilidades `HIGH` o `CRITICAL` que estén
 solucionadas en la base de datos de vulnerabilidades. ZAP está configurado
@@ -63,16 +70,47 @@ bloquear todavía el pipeline; después puedes endurecer esa política.
 
 ## Kubernetes local y Argo CD
 
-El chart Helm está en `helm/trivy-project` y el manifiesto de Argo CD en
-`argocd/application.yaml`. Para probarlo en un cluster kind, primero construye
-la imagen y cárgala en el nodo:
+El backend y el frontend tienen charts independientes:
 
-```bash
-docker build -t trivy-project:local .
-kind load docker-image trivy-project:local --name desktop
-kubectl --context kind-desktop apply -f argocd/application.yaml
+```text
+helm/backend
+helm/frontend
 ```
 
-Argo CD sincronizará el chart desde GitHub y creará el namespace
-`trivy-project`. El chart ejecuta la API como usuario no-root y define probes
-de readiness y liveness sobre `/health`.
+`helmfile.yaml` los instala como dos releases coordinadas:
+
+```bash
+helmfile sync
+```
+
+La release `todo-frontend` depende de `todo-backend`. El frontend usa Nginx
+como proxy y reenvía `/api/*` al Service interno del backend.
+
+Argo CD usa dos Applications, porque no interpreta Helmfile directamente:
+
+```text
+argocd/backend-application.yaml
+argocd/frontend-application.yaml
+```
+
+Para aplicarlas en kind:
+
+```bash
+kubectl --context kind-desktop apply -f argocd/backend-application.yaml
+kubectl --context kind-desktop apply -f argocd/frontend-application.yaml
+```
+
+Argo CD sincronizará ambos charts desde GitHub y creará el namespace `todo`.
+Las imágenes se descargan desde:
+
+```text
+ghcr.io/jualvarez9/trivy-project-backend:latest
+ghcr.io/jualvarez9/trivy-project-frontend:latest
+```
+
+Para comprobar el despliegue:
+
+```bash
+kubectl --context kind-desktop get applications -n argocd
+kubectl --context kind-desktop get pods -n todo
+```

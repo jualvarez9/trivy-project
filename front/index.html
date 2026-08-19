@@ -16,7 +16,7 @@
         async function createTask() {
             const title = document.getElementById("title").value;
 
-            const response = await fetch("http://127.0.0.1:8000/tasks", {
+            const response = await fetch("/api/tasks", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
