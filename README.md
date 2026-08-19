@@ -60,3 +60,19 @@ El job falla si Trivy encuentra vulnerabilidades `HIGH` o `CRITICAL` que estén
 solucionadas en la base de datos de vulnerabilidades. ZAP está configurado
 inicialmente con `fail_action: false` para poder observar sus hallazgos sin
 bloquear todavía el pipeline; después puedes endurecer esa política.
+
+## Kubernetes local y Argo CD
+
+El chart Helm está en `helm/trivy-project` y el manifiesto de Argo CD en
+`argocd/application.yaml`. Para probarlo en un cluster kind, primero construye
+la imagen y cárgala en el nodo:
+
+```bash
+docker build -t trivy-project:local .
+kind load docker-image trivy-project:local --name desktop
+kubectl --context kind-desktop apply -f argocd/application.yaml
+```
+
+Argo CD sincronizará el chart desde GitHub y creará el namespace
+`trivy-project`. El chart ejecuta la API como usuario no-root y define probes
+de readiness y liveness sobre `/health`.
