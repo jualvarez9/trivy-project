@@ -9,3 +9,4 @@ tasks.db
 
 # Virtual environments
 .venv
+/zap-reports
