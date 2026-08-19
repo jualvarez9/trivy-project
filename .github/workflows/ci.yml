@@ -44,6 +44,7 @@ jobs:
       - name: Start API for DAST
         run: |
           uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/fastapi.log 2>&1 &
+          echo $! > /tmp/fastapi.pid
           for attempt in {1..30}; do
             if curl --fail --silent http://127.0.0.1:8000/health > /dev/null; then
               break
@@ -58,6 +59,10 @@ jobs:
           target: http://127.0.0.1:8000
           fail_action: false
           allow_issue_writing: false
+
+      - name: Stop API
+        if: always()
+        run: kill "$(cat /tmp/fastapi.pid)" || true
 
       - name: Scan Dockerfile configuration with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
