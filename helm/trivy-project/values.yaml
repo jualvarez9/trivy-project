@@ -1,9 +1,9 @@
 replicaCount: 1
 
 image:
-  repository: trivy-project
-  tag: local
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/jualvarez9/trivy-project
+  tag: latest
+  pullPolicy: Always
 
 service:
   type: ClusterIP
@@ -15,6 +15,7 @@ securityContext:
   runAsNonRoot: true
   runAsUser: 10001
   runAsGroup: 10001
+  readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
   capabilities:
     drop:
