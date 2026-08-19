@@ -4,8 +4,8 @@ COPY --from=ghcr.io/astral-sh/uv:0.12.5 /uv /uvx /bin/
 
 WORKDIR /app
 
-RUN groupadd --system appgroup \
-    && useradd --system --gid appgroup --home-dir /app appuser
+RUN groupadd --system --gid 10001 appgroup \
+    && useradd --system --uid 10001 --gid 10001 --home-dir /app appuser
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
